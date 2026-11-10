@@ -1,0 +1,31 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const source=fs.readFileSync(path.resolve(__dirname,'../frontend/page-notifications.js'),'utf8');
+const store=new Map(),sent=[],queue=new Map();
+const storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};
+const Notification={permission:'granted',requestPermission:async()=>Notification.permission};
+const window={localStorage:storage,isSecureContext:true,Notification,addEventListener(){}};
+const locks={request(key,fn){const result=(queue.get(key)||Promise.resolve()).then(fn);queue.set(key,result.catch(()=>{}));return result;}};
+const context=vm.createContext({window,Notification,navigator:{locks},location:{origin:'https://plotter.test'},setTimeout,clearTimeout,console});
+vm.runInContext(source,context);
+function create(){const nodes={hint:{},toggle:{addEventListener(){}},test:{addEventListener(){}},completion:{hidden:true}};return new window.PageNotifications({...nodes,notify:async(title,options)=>sent.push({title,...options})});}
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
+(async()=>{
+ let app=create();await app.toggleEnabled();
+ const running={phase:'running',port:'COM5',job_id:'a',acknowledged:0,total:20};
+ app.remember(running,{device:'书桌',page:1,pages:2});app.observe(running);
+ app.observe({...running,phase:'draining',acknowledged:20});await flush();assert.equal(sent.length,0,'ACK count must not notify');
+ const secondTab=create();app.observe({...running,phase:'complete'});secondTab.observe({...running,phase:'complete'});await flush();
+ assert.equal(sent.length,1,'Multiple tabs must only deliver once');assert.match(sent[0].body,/第 1 \/ 2 页/);
+ for(let n=0;n<3;n++)app.observe({...running,phase:'complete'});await flush();assert.equal(sent.length,1);
+ app=create();app.observe({...running,phase:'complete'});await flush();assert.equal(sent.length,1,'Reload must not duplicate');
+ const next={...running,job_id:'b'};app.remember(next,{page:2,pages:2});app.observe(next);app.observe({...next,phase:'paused'});app.observe({...next,phase:'stopped'});await flush();assert.equal(sent.length,1);
+ app.observe({...next,phase:'complete'});await flush();assert.equal(sent.length,2);assert.match(sent[1].body,/最后一页/);
+ const historical={...running,job_id:'old',phase:'complete'};app.observe(historical);await flush();assert.equal(sent.length,2);
+ await app.toggleEnabled();const silent={...running,job_id:'c'};app.observe(silent);app.observe({...silent,phase:'complete'});await flush();assert.equal(sent.length,2);assert.equal(app.completion.hidden,false);
+ Notification.permission='denied';await app.toggleEnabled();assert.equal(app.read().enabled,false);assert.match(app.hint.textContent,/拒绝/);
+ Notification.permission='granted';await app.testNotification();assert.equal(sent.length,3);
+ await app.toggleEnabled();const restore={...running,job_id:'d'};app.remember(restore,{page:3,pages:4});app=create();app.observe({...restore,phase:'complete'});await flush();assert.equal(sent.length,4,'Active task survives reload');
+ const sameIdOtherDevice={...running,job_id:'d',port:'COM1'};app.observe(sameIdOtherDevice);app.observe({...sameIdOtherDevice,phase:'complete'});await flush();assert.equal(sent.length,5,'Ports must have independent keys');
+ window.isSecureContext=false;app.render();assert.equal(app.toggle.disabled,true);assert.match(app.hint.textContent,/不支持/);
+ console.log('PASS: physical completion, one notification per page across polls/tabs/reload, page numbers, disabled/denied/unsupported fallbacks and device isolation');
+})().catch(e=>{console.error(e);process.exitCode=1;});

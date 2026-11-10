@@ -1,0 +1,111 @@
+{
+  "version": 2,
+  "description": "书写说明的人工整理与几何近似；不是训练模型或书法标准。字内连带向字间连接的迁移属于工程推断。",
+  "sources": [
+    {
+      "id": "S1",
+      "title": "张润顺：行书教学（第二课）",
+      "url": "https://www.songjiang.gov.cn/shsj_maogang_nas/f64b5a4a-9e09-4088-9912-c9379fed281f/1a534c11-b08c-46db-919f-847db6024635/20201204%E4%B8%8A.pdf",
+      "summary": "讲解点的回勾和横画向上、向下的连带，指出行书可能调整笔顺。本实现只借鉴引带方向，不自动改笔顺。"
+    },
+    {
+      "id": "S2",
+      "title": "六品书画课堂：硬笔书法行书笔画连带写法技巧详解",
+      "url": "https://www.liupinshuyuan.com/news/145.html",
+      "summary": "附钩和回折需要根据后续起笔位置选择方向，常用笔画间存在可练习的连接模式。"
+    },
+    {
+      "id": "S3",
+      "title": "墨雅斋主：硬笔行书怎么写？你必须掌握的4种书写技巧",
+      "url": "https://k.sina.cn/article_7018619077_1a257a0c500100ru0g.html?from=cul",
+      "summary": "讲解收笔带出、点画呼应和牵丝的实连、虚连；强调主笔与引带的主次关系。"
+    },
+    {
+      "id": "S4",
+      "title": "书法等级考试教程·行楷，第5页公开样图",
+      "url": "https://pic2.zhimg.com/c293b6079983a7510f6677cf907ded51_b.jpg",
+      "summary": "已看图：二连横、三连横与楷字留形训练；底部红豆生南国横排正文以分开的字为主。署名及版本未独立确认，不归为吴玉生原帖。"
+    },
+    {
+      "id": "S5",
+      "title": "田英章硬笔行书技法，第6—7页公开实拍",
+      "url": "https://auctions.yahoo.co.jp/jp/auction/r476117189",
+      "summary": "已看实拍：区分虚连、实连、简省连接；右页呈现行书笔顺变化。用于理解正文与牵丝主次，不逐字转描。"
+    },
+    {
+      "id": "S6",
+      "title": "吴玉生书陈陶从军行公开作品图",
+      "url": "https://k.sina.com.cn/article_7018619077_1a257a0c500100prus.html",
+      "summary": "已看图：竖写作品中存在字内连带与字间断开；只观察连断节奏，不将竖排连接直接旋转用于横排。"
+    }
+  ],
+  "rules": [
+    {
+      "id": "QS1",
+      "name": "顺势引带",
+      "sources": [
+        "S2",
+        "S3"
+      ],
+      "mapping": "用两字终始笔的局部方向控制曲线两端，连续落笔。"
+    },
+    {
+      "id": "QS2",
+      "name": "上绕或下绕",
+      "sources": [
+        "S1",
+        "S2"
+      ],
+      "mapping": "先尝试小幅上、下弧线，再尝试直接顺势曲线；避开已有笔画。字间应用为几何推断。"
+    },
+    {
+      "id": "QS3",
+      "name": "回带转接",
+      "sources": [
+        "S1",
+        "S2"
+      ],
+      "mapping": "允许收笔或起笔方向暂时朝左，曲线保持切向后折回；不允许自交或穿过正文。"
+    },
+    {
+      "id": "QS4",
+      "name": "连断交替",
+      "sources": [
+        "S3"
+      ],
+      "mapping": "概率控制实连，最多连续三个字；分隔符与公式处抬笔。不重排原字体笔顺。"
+    },
+    {
+      "id": "QS5",
+      "name": "字帖参照的克制引带",
+      "sources": [
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "mapping": "不优先添加固定弧线；按终始笔切向生成小幅非对称曲线，以长度、转角与偏离量排序，检查失败则断开。参数为工程近似，不是样图测得分布。"
+    }
+  ],
+  "geometry": {
+    "max_horizontal_em": 1.05,
+    "max_distance_em": 1.15,
+    "max_vertical_em": 0.7,
+    "max_excursion_em": 0.18,
+    "clearance_em": 0.012,
+    "handle_min_em": 0.06,
+    "handle_max_em": 0.22,
+    "handle_distance_ratio": 0.3,
+    "arch_em": 0.13,
+    "copybook": {
+      "max_horizontal_em": 0.75,
+      "max_distance_em": 0.85,
+      "handle_max_em": 0.14,
+      "max_length_ratio": 1.22,
+      "max_bow_ratio": 0.1,
+      "spacing_reduction_range": [
+        0.25,
+        0.6
+      ]
+    }
+  }
+}

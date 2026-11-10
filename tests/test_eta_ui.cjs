@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../frontend/app.js'),'utf8');
+const nodes={taskEta:{},etaDetail:{}};
+const context=vm.createContext({$:id=>nodes[id],state:{}});
+vm.runInContext(source.slice(source.indexOf('function formatEtaDuration('),source.indexOf('function canAdjustSpeed()')),context);
+function render(state){context.state=state;vm.runInContext('renderEta()',context);return nodes.taskEta.textContent;}
+const running={connected:true,job_id:'a',phase:'running',eta:{remaining_seconds:125,estimated_finish_at:1700000125,source:'observed',status:'running'}};
+assert.match(render(running),/3 分钟/);
+assert.match(nodes.etaDetail.textContent,/预计完成/);
+assert.match(render({...running,phase:'paused'}),/已暂停/);
+assert.doesNotMatch(nodes.etaDetail.textContent,/预计完成 \d/);
+assert.match(render({...running,eta:{status:'draining',remaining_seconds:null}}),/收尾/);
+assert.match(render({...running,phase:'complete'}),/已完成/);
+assert.match(render({...running,phase:'failed'}),/—/);
+assert.match(render({...running,connected:false,phase:'控制端离线'}),/不可用/);
+assert.match(render({...running,eta:{status:'calibrating'}}),/正在估算/);
+assert.equal(vm.runInContext('formatEtaDuration(3660)',context),'1 小时 1 分钟');
+console.log('PASS: ETA formatting, pause, tail, completion, failure and offline');

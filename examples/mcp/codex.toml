@@ -1,0 +1,11 @@
+# Merge this table into Codex config.toml; adjust executable/project paths.
+[mcp_servers.zhijian_plotter]
+command = "python"
+args = ["C:/path/to/xieziji/backend/mcp_server.py"]
+env_vars = ["PLOTTER_TOKEN"]
+startup_timeout_sec = 30
+tool_timeout_sec = 180
+
+[mcp_servers.zhijian_plotter.env]
+PLOTTER_API_URL = "http://127.0.0.1:8080"
+PYTHONIOENCODING = "utf-8"

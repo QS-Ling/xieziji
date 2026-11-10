@@ -1,0 +1,15 @@
+# Run: npx @deepseek-ai/dsh web --patch ./examples/mcp/dsh.patch.yml
+# Adjust Python/script paths and the business service address if needed.
+- insert:
+    - id: mcp-zhijian-plotter
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: zhijian_plotter
+        transport: stdio
+        command: python
+        args: ['C:/path/to/xieziji/backend/mcp_server.py']
+        toolCallTimeoutMs: 180000
+        env:
+          PLOTTER_API_URL: 'http://127.0.0.1:8080'
+          PLOTTER_TOKEN: !!js process.env.PLOTTER_TOKEN
+          PYTHONIOENCODING: utf-8
